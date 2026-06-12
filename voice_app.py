@@ -145,6 +145,18 @@ elif page == "🎤 Voice Generator":
     placeholder="Type or paste your content here...",
     height=220
 )
+    # File Name
+    file_name = st.text_input(
+    "📁 File Name",
+    value="voice"
+)
+    # Counter
+    char_count = len(text)
+    word_count = len(text.split())
+
+    st.write(f"Characters: {char_count}")
+    st.write(f"Words: {word_count}")
+    
     # -----------------------------
     # LANGUAGE DISPLAY
     # -----------------------------
@@ -254,105 +266,157 @@ elif page == "🎤 Voice Generator":
     voice_id = selected_voice["value"]
 
     locale = selected_voice["locale"]
+    voice_style = st.selectbox(
+    "🎭 Voice Style",
+    [
+        "Custom",
+        "YouTube Narration",
+        "Storytelling",
+        "News Reporter",
+        "Documentary",
+        "YouTube Shorts"
+    ]
+)
 
-    # -----------------------------
-    # LANGUAGE CODE
-    # -----------------------------
-    def get_lang_code(locale):
-        return locale.split("-")[0]
+speed = 0
+pitch = 0
 
-    # -----------------------------
-    # GENERATE BUTTON
-    # -----------------------------
-    if st.button("🚀 Generate Voice"):
+if voice_style == "Storytelling":
+    speed = -15
+    pitch = -10
 
-        # Empty Check
-        if text.strip() == "":
+elif voice_style == "News Reporter":
+    speed = 10
 
-            st.error(
-                "Please enter text"
+elif voice_style == "Documentary":
+    speed = -10
+    pitch = -15
+
+elif voice_style == "YouTube Shorts":
+    speed = 25
+    pitch = 10
+
+if voice_style == "Custom":
+    speed = st.slider(
+        "⚡ Voice Speed (%)",
+        -50, 50, 0, 5
+    )
+
+    pitch = st.slider(
+        "🎵 Voice Pitch (Hz)",
+        -50, 50, 0, 5
+    )
+
+st.info(
+    f"Speed: {speed}% | Pitch: {pitch}Hz"
+)
+
+# -----------------------------
+# LANGUAGE CODE
+# -----------------------------
+def get_lang_code(locale):
+    return locale.split("-")[0]
+
+# -----------------------------
+# PREVIEW BUTTON
+# -----------------------------
+preview_btn = st.button(
+    "🔊 Preview Voice",
+    key="preview_voice_btn"
+)
+
+if preview_btn:
+
+    if text.strip() == "":
+        st.warning("Please enter text first")
+
+    else:
+
+        preview_text = text[:150]
+
+        preview_file = "preview.mp3"
+
+        with st.spinner("Generating preview..."):
+
+            async def preview_voice():
+
+                communicate = edge_tts.Communicate(
+                    preview_text,
+                    voice_id,
+                    rate=f"{speed:+d}%"
+                )
+
+                await communicate.save(preview_file)
+
+            asyncio.run(preview_voice())
+
+        with open(preview_file, "rb") as f:
+            st.audio(f.read(), format="audio/mp3")
+
+# -----------------------------
+# GENERATE BUTTON
+# -----------------------------
+st.write("Current filename:", file_name)
+generate_btn = st.button(
+    "🚀 Generate Voice",
+    key="generate_voice_btn"
+)
+
+if generate_btn:
+
+    if text.strip() == "":
+        st.error("Please enter text")
+        st.stop()
+
+    if len(text) > 10000:
+        st.error("Maximum 10000 characters allowed")
+        st.stop()
+
+    lang_code = get_lang_code(locale)
+
+    translated_text = text
+
+    if lang_code != "en":
+
+        try:
+            translated_text = GoogleTranslator(
+                source="auto",
+                target=lang_code
+            ).translate(text)
+
+        except Exception:
+            st.warning(
+                "Translation failed. Using original text."
             )
 
-            st.stop()
+    output_file = f"{file_name}.mp3"
 
-        # Character Limit
-        if len(text) > 10000:
+    with st.spinner(
+        "🤖 AI is generating your voice..."
+    ):
 
-            st.error(
-                "Maximum 10000 characters allowed"
+        async def generate_voice():
+
+            communicate = edge_tts.Communicate(
+                translated_text,
+                voice_id,
+                rate=f"{speed:+d}%"
             )
 
-            st.stop()
+            await communicate.save(output_file)
 
-        lang_code = get_lang_code(
-            locale
-        )
+        asyncio.run(generate_voice())
 
-        translated_text = text
+    st.success("Voice Generated Successfully 🎉")
 
-        # Translation
-        if lang_code != "en":
+    with open(output_file, "rb") as f:
+        audio_bytes = f.read()
 
-            try:
+    st.audio(audio_bytes, format="audio/mp3")
 
-                translated_text = (
-                    GoogleTranslator(
-                        source="auto",
-                        target=lang_code
-                    ).translate(text)
-                )
-
-            except Exception:
-
-                st.warning(
-                    "Translation failed. Using original text."
-                )
-
-                translated_text = text
-
-        output_file = "voice.mp3"
-
-        # Spinner
-        with st.spinner(
-            "🤖 AI is generating your voice..."
-        ):
-
-            async def generate_voice():
-
-                communicate = (
-                    edge_tts.Communicate(
-                        translated_text,
-                        voice_id
-                    )
-                )
-
-                await communicate.save(
-                    output_file
-                )
-
-            asyncio.run(
-                generate_voice()
-            )
-
-        st.success(
-            "Voice Generated Successfully 🎉"
-        )
-
-        with open(
-            output_file,
-            "rb"
-        ) as f:
-
-            audio_bytes = f.read()
-
-        st.audio(
-            audio_bytes,
-            format="audio/mp3"
-        )
-
-        st.download_button(
-            "⬇ Download Audio",
-            data=audio_bytes,
-            file_name="voice.mp3",
-            mime="audio/mp3"
-        )
+    st.download_button(
+    "⬇ Download Audio",
+    data=audio_bytes,
+    file_name=f"{file_name}.mp3",
+    mime="audio/mp3"
+)
