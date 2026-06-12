@@ -145,17 +145,18 @@ elif page == "🎤 Voice Generator":
     placeholder="Type or paste your content here...",
     height=220
 )
+     # Counter
+    char_count = len(text)
+    word_count = len(text.split())
+
+    st.caption(
+    f"Words: {word_count} | Characters: {char_count} / 10000"
+)
     # File Name
     file_name = st.text_input(
     "📁 File Name",
     value="voice"
 )
-    # Counter
-    char_count = len(text)
-    word_count = len(text.split())
-
-    st.write(f"Characters: {char_count}")
-    st.write(f"Words: {word_count}")
     
     # -----------------------------
     # LANGUAGE DISPLAY
