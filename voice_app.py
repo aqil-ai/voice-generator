@@ -8,7 +8,7 @@ from deep_translator import GoogleTranslator
 # -----------------------------
 st.set_page_config(
     page_title="AqilAI Studio",
-    page_icon="🎙️",
+    page_icon="logo.png.jpeg",
     layout="wide"
 )
 
@@ -68,7 +68,8 @@ input {
 # -----------------------------
 # SIDEBAR
 # -----------------------------
-st.sidebar.title("🎙 AqilAI Studio")
+st.sidebar.image("logo.png.jpeg", width=150)
+# st.sidebar.title("🎙 AqilAI Studio")
 
 page = st.sidebar.selectbox(
     "Navigate",
@@ -82,6 +83,7 @@ page = st.sidebar.selectbox(
 # HOME PAGE
 # -----------------------------
 if page == "🏠 Home":
+    # st.image("logo.png.jpeg", width=250)
 
     st.markdown("""
 <div class="glass-card">
