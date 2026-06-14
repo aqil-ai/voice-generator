@@ -1,8 +1,13 @@
 import streamlit as st
 import asyncio
 import edge_tts
+import os
+from dotenv import load_dotenv
 from deep_translator import GoogleTranslator
-
+import requests
+import random
+import zipfile
+from io import BytesIO
 # -----------------------------
 # PAGE CONFIG
 # -----------------------------
@@ -12,6 +17,9 @@ st.set_page_config(
     layout="wide"
 )
 
+load_dotenv()
+
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 # -----------------------------
 # PROFESSIONAL UI
 # -----------------------------
@@ -64,7 +72,30 @@ input {
 
 </style>
 """, unsafe_allow_html=True)
+# PEXELS FUNCTION
+# -----------------------------
+def search_images(query):
 
+    headers = {
+        "Authorization": PEXELS_API_KEY
+    }
+    page_no = random.randint(1, 20)
+
+    url = f"https://api.pexels.com/v1/search?query={query}&per_page=10&page={page_no}"
+
+    response = requests.get(
+        url,
+        headers=headers
+    )
+
+    data = response.json()
+
+    images = []
+
+    for photo in data.get("photos", []):
+        images.append(photo["src"]["landscape"])
+
+    return images
 # -----------------------------
 # SIDEBAR
 # -----------------------------
@@ -75,7 +106,8 @@ page = st.sidebar.selectbox(
     "Navigate",
     [
         "🏠 Home",
-        "🎤 Voice Generator"
+        "🎤 Voice Generator",
+        "🖼 Image Generator"
     ]
 )
 
@@ -424,3 +456,75 @@ elif page == "🎤 Voice Generator":
             file_name=f"{file_name}.mp3",
             mime="audio/mp3"
         )
+        # -----------------------------
+# IMAGE GENERATOR
+# -----------------------------
+elif page == "🖼 Image Generator":
+
+    st.title("🖼 AI Image Generator")
+
+    script = st.text_area(
+        "📝 Paste Your Script Here",
+        height=250
+    )
+    if "images" not in st.session_state:
+        st.session_state.images = []
+      
+
+    if st.button("🔍 Find Images"):
+
+        if script.strip() == "":
+            st.warning("Please paste a script")
+
+        else:
+
+            with st.spinner("Finding images..."):
+
+                st.session_state.images = search_images(script[:100])
+
+if len(st.session_state.images) > 0:
+                st.success(
+                    f"Found {len(st.session_state.images)} images"
+                )
+                #Zip code
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(
+                    zip_buffer,
+                    "a",
+                    zipfile.ZIP_DEFLATED,
+                    False
+                    ) as zip_file:
+                    for i, img in enumerate(st.session_state.images):
+                        image_data = requests.get(img).content
+                        zip_file.writestr(
+                             f"image_{i+1}.jpg",
+                             image_data
+                        )
+                zip_buffer.seek(0)
+                st.download_button(
+                            label="📦 Download All Images ZIP",
+                            data=zip_buffer,
+                            file_name="all_images.zip",
+                             mime="application/zip",
+                             key="zip_download"
+                        )
+                
+                
+
+
+                cols = st.columns(3)
+                for i, img in enumerate(st.session_state.images):
+                    with cols[i % 3]:
+                        st.image(
+                        img,
+                        use_container_width=True
+                    )
+                        image_data = requests.get(img).content
+                        st.download_button(
+                        label="⬇ Download",
+                        # label=f"⬇ Download Image {i+1}",
+                        data=image_data,
+                        file_name=f"image_{i+1}.jpg",
+                        mime="image/jpeg",
+                        key=f"download_{i}"
+                    )
