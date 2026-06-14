@@ -2,3 +2,5 @@ streamlit
 edge-tts
 deep-translator
 streamlit-local-storage
+python-dotenv
+requests
