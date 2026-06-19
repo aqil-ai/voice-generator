@@ -8,6 +8,7 @@ import requests
 import random
 import zipfile
 from io import BytesIO
+import urllib.parse
 # -----------------------------
 # PAGE CONFIG
 # -----------------------------
@@ -107,7 +108,8 @@ page = st.sidebar.selectbox(
     [
         "🏠 Home",
         "🎤 Voice Generator",
-        "🖼 Image Generator"
+        "🖼 Image Generator",
+        "🎨 AI Image Generator"
     ]
 )
 
@@ -178,6 +180,15 @@ elif page == "🎤 Voice Generator":
     "📝 Enter Your Script",
     placeholder="Type or paste your content here...",
     height=220
+)
+    image_source = st.radio(
+        "Choose Image Source",
+        ["📷 Pexels", "🎨 AI (Pollinations)"]
+)
+
+    style = st.text_input(
+        "🎨 Image Style",
+        placeholder="Example: white background, realistic, cinematic"
 )
      # Counter
     char_count = len(text)
@@ -482,7 +493,7 @@ elif page == "🖼 Image Generator":
 
                 st.session_state.images = search_images(script[:100])
 
-if len(st.session_state.images) > 0:
+    if len(st.session_state.images) > 0:
                 st.success(
                     f"Found {len(st.session_state.images)} images"
                 )
@@ -527,4 +538,52 @@ if len(st.session_state.images) > 0:
                         file_name=f"image_{i+1}.jpg",
                         mime="image/jpeg",
                         key=f"download_{i}"
+                    )
+# XTTS
+
+elif page == "🎨 AI Image Generator":
+
+    st.title("🎨 AI Image Generator")
+
+    prompt = st.text_area(
+        "📝 Describe your image",
+        height=200
+    )
+
+    if st.button("🚀 Generate AI Images"):
+
+        if prompt.strip() == "":
+            st.warning("Please enter a prompt.")
+
+        else:
+
+            cols = st.columns(2)
+
+            for i in range(2):
+
+                seed = random.randint(1, 1000000)
+
+                encoded_prompt = urllib.parse.quote(
+                    f"{prompt} seed:{seed}"
+                )
+
+                image_url = (
+                    f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+                )
+
+                with cols[i]:
+
+                    st.image(
+                        image_url,
+                        use_container_width=True
+                    )
+
+                    image_data = requests.get(image_url).content
+
+                    st.download_button(
+                        label=f"⬇ Download Image {i+1}",
+                        data=image_data,
+                        file_name=f"ai_image_{i+1}.jpg",
+                        mime="image/jpeg",
+                        key=f"ai_download_{i}"
                     )
