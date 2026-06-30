@@ -9,9 +9,9 @@ import random
 import zipfile
 from io import BytesIO
 import urllib.parse
-from modules.scenes import split_into_scenes
-from modules.video import create_video
-from modules.captions import get_words
+# from modules.scenes import split_into_scenes
+# from modules.video import create_video
+# from modules.captions import get_words
 
 def get_language_display(locale):
 
