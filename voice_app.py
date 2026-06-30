@@ -9,6 +9,49 @@ import random
 import zipfile
 from io import BytesIO
 import urllib.parse
+from modules.scenes import split_into_scenes
+from modules.video import create_video
+from modules.captions import get_words
+
+def get_language_display(locale):
+
+    mapping = {
+        "en": "English",
+        "de": "German",
+        "fr": "French",
+        "es": "Spanish",
+        "it": "Italian",
+        "pt": "Portuguese",
+        "nl": "Dutch",
+        "pl": "Polish",
+        "ru": "Russian",
+        "ja": "Japanese",
+        "ko": "Korean",
+        "zh": "Chinese",
+        "hi": "Hindi",
+        "ar": "Arabic",
+        "tr": "Turkish",
+        "sv": "Swedish",
+        "da": "Danish",
+        "fi": "Finnish",
+        "no": "Norwegian"
+    }
+
+    lang_code = locale.split("-")[0]
+
+    return mapping.get(
+        lang_code,
+        lang_code
+    )
+
+
+@st.cache_data
+def load_voices():
+
+    async def get_voices():
+        return await edge_tts.list_voices()
+
+    return asyncio.run(get_voices())
 # -----------------------------
 # PAGE CONFIG
 # -----------------------------
@@ -109,7 +152,8 @@ page = st.sidebar.selectbox(
         "🏠 Home",
         "🎤 Voice Generator",
         "🖼 Image Generator",
-        "🎨 AI Image Generator"
+        # "🎨 AI Image Generator",
+        # "🎬 AI Video Generator"
     ]
 )
 
@@ -181,15 +225,15 @@ elif page == "🎤 Voice Generator":
     placeholder="Type or paste your content here...",
     height=220
 )
-    image_source = st.radio(
-        "Choose Image Source",
-        ["📷 Pexels", "🎨 AI (Pollinations)"]
-)
+#     image_source = st.radio(
+#         "Choose Image Source",
+#         ["📷 Pexels", "🎨 AI (Pollinations)"]
+# )
 
-    style = st.text_input(
-        "🎨 Image Style",
-        placeholder="Example: white background, realistic, cinematic"
-)
+#     style = st.text_input(
+#         "🎨 Image Style",
+#         placeholder="Example: white background, realistic, cinematic"
+# )
      # Counter
     char_count = len(text)
     word_count = len(text.split())
@@ -206,47 +250,47 @@ elif page == "🎤 Voice Generator":
     # -----------------------------
     # LANGUAGE DISPLAY
     # -----------------------------
-    def get_language_display(locale):
+    # def get_language_display(locale):
 
-        mapping = {
-            "en": "English",
-            "de": "German",
-            "fr": "French",
-            "es": "Spanish",
-            "it": "Italian",
-            "pt": "Portuguese",
-            "nl": "Dutch",
-            "pl": "Polish",
-            "ru": "Russian",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "zh": "Chinese",
-            "hi": "Hindi",
-            "ar": "Arabic",
-            "tr": "Turkish",
-            "sv": "Swedish",
-            "da": "Danish",
-            "fi": "Finnish",
-            "no": "Norwegian"
-        }
+    #     mapping = {
+    #         "en": "English",
+    #         "de": "German",
+    #         "fr": "French",
+    #         "es": "Spanish",
+    #         "it": "Italian",
+    #         "pt": "Portuguese",
+    #         "nl": "Dutch",
+    #         "pl": "Polish",
+    #         "ru": "Russian",
+    #         "ja": "Japanese",
+    #         "ko": "Korean",
+    #         "zh": "Chinese",
+    #         "hi": "Hindi",
+    #         "ar": "Arabic",
+    #         "tr": "Turkish",
+    #         "sv": "Swedish",
+    #         "da": "Danish",
+    #         "fi": "Finnish",
+    #         "no": "Norwegian"
+    #     }
 
-        lang_code = locale.split("-")[0]
+    #     lang_code = locale.split("-")[0]
 
-        return mapping.get(
-            lang_code,
-            lang_code
-        )
+    #     return mapping.get(
+    #         lang_code,
+    #         lang_code
+    #     )
 
-    # -----------------------------
-    # LOAD ALL VOICES
-    # -----------------------------
-    @st.cache_data
-    def load_voices():
+    # # -----------------------------
+    # # LOAD ALL VOICES
+    # # -----------------------------
+    # @st.cache_data
+    # def load_voices():
 
-        async def get_voices():
-            return await edge_tts.list_voices()
+    #     async def get_voices():
+    #         return await edge_tts.list_voices()
 
-        return asyncio.run(get_voices())
+    #     return asyncio.run(get_voices())
 
     all_voices = load_voices()
 
@@ -310,6 +354,7 @@ elif page == "🎤 Voice Generator":
     )
 
     voice_id = selected_voice["value"]
+    st.session_state.voice_id = voice_id
 
     locale = selected_voice["locale"]
     voice_style = st.selectbox(
@@ -472,7 +517,7 @@ elif page == "🎤 Voice Generator":
 # -----------------------------
 elif page == "🖼 Image Generator":
 
-    st.title("🖼 AI Image Generator")
+    st.title("🖼 Image Generator")
 
     script = st.text_area(
         "📝 Paste Your Script Here",
@@ -539,51 +584,248 @@ elif page == "🖼 Image Generator":
                         mime="image/jpeg",
                         key=f"download_{i}"
                     )
-# XTTS
+# # XTTS
 
-elif page == "🎨 AI Image Generator":
+# elif page == "🎨 AI Image Generator":
 
-    st.title("🎨 AI Image Generator")
+#     st.title("🎨 AI Image Generator")
 
-    prompt = st.text_area(
-        "📝 Describe your image",
-        height=200
-    )
+#     prompt = st.text_area(
+#         "📝 Describe your image",
+#         height=200
+#     )
 
-    if st.button("🚀 Generate AI Images"):
+#     if st.button("🚀 Generate AI Images"):
 
-        if prompt.strip() == "":
-            st.warning("Please enter a prompt.")
+#         if prompt.strip() == "":
+#             st.warning("Please enter a prompt.")
 
-        else:
+#         else:
 
-            cols = st.columns(2)
+#             cols = st.columns(2)
 
-            for i in range(2):
+#             for i in range(2):
 
-                seed = random.randint(1, 1000000)
+#                 seed = random.randint(1, 1000000)
 
-                encoded_prompt = urllib.parse.quote(
-                    f"{prompt} seed:{seed}"
-                )
+#                 encoded_prompt = urllib.parse.quote(
+#                     f"{prompt} seed:{seed}"
+#                 )
 
-                image_url = (
-                    f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-                )
+#                 image_url = (
+#                     f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+#                 )
 
-                with cols[i]:
+#                 with cols[i]:
 
-                    st.image(
-                        image_url,
-                        use_container_width=True
-                    )
+#                     st.image(
+#                         image_url,
+#                         use_container_width=True
+#                     )
 
-                    image_data = requests.get(image_url).content
+#                     image_data = requests.get(image_url).content
 
-                    st.download_button(
-                        label=f"⬇ Download Image {i+1}",
-                        data=image_data,
-                        file_name=f"ai_image_{i+1}.jpg",
-                        mime="image/jpeg",
-                        key=f"ai_download_{i}"
-                    )
+#                     st.download_button(
+#                         label=f"⬇ Download Image {i+1}",
+#                         data=image_data,
+#                         file_name=f"ai_image_{i+1}.jpg",
+#                         mime="image/jpeg",
+#                         key=f"ai_download_{i}"
+#                     )
+
+# # 🎬 AI Video Generator
+# elif page == "🎬 AI Video Generator":
+
+#     st.title("🎬 AI Video Generator")
+
+#     script = st.text_area(
+#         "📝 Enter Script",
+#         height=250
+#     )
+
+#     video_type = st.selectbox(
+#         "📱 Video Type",
+#         [
+#             "YouTube Long",
+#             "YouTube Shorts",
+#             "TikTok",
+#             "Instagram Reel",
+#             "Netflix Documentary"
+#         ]
+#     )
+#     caption_style = st.selectbox(
+#         "🎨 Caption Style",
+#         [
+#             "Yellow",
+#             "White",
+#             "TikTok",
+#             "YouTube Shorts",
+#             "Neon Green"
+#         ]
+#     )
+#     all_voices = load_voices()
+#     voice_map = []
+#     for v in all_voices:
+#         voice_map.append({
+#             "label":
+#             f"{get_language_display(v['Locale'])} | "
+#             f"{v['Gender']} | "
+#             f"{v['ShortName']}",
+#              "value":
+#              v["ShortName"]
+#         })
+#     voice_label = st.selectbox(
+#         "🎤 Select Voice",
+#         options=[
+#             v["label"]
+#             for v in voice_map
+#         ]
+#     )
+#     selected_voice = next(
+#         v for v in voice_map
+#         if v["label"] == voice_label
+#     )
+#     voice_id = selected_voice["value"]
+#     if "video_path" not in st.session_state:
+#         st.session_state.video_path = None
+
+
+#     if "image_files" not in st.session_state:
+#         st.session_state.image_files = []
+#         if "scenes" not in st.session_state:
+#             st.session_state.scenes = []
+
+
+#     if st.button("🚀 Generate Scenes"):
+
+#         st.session_state.image_files = []
+
+#         scenes = split_into_scenes(script)
+#         st.session_state.scenes = scenes
+
+#         st.success(
+#             f"{len(scenes)} scenes created"
+#         )
+
+#         cols = st.columns(2)
+
+#         for i, scene in enumerate(scenes):
+
+#             with cols[i % 2]:
+
+#                 st.subheader(
+#                     f"Scene {i+1}"
+#                 )
+
+#                 st.write(scene)
+
+#                 images = search_images(scene)
+
+#                 if len(images) > 0:
+
+#                     image_path = f"downloads/scene_{i}.jpg"
+
+#                     image_data = requests.get(
+#                         images[0]
+#                     ).content
+
+#                     with open(
+#                         image_path,
+#                         "wb"
+#                     ) as f:
+#                         f.write(image_data)
+
+
+#                     st.session_state.image_files.append(
+#                         image_path
+#                     )
+
+
+#                     st.image(
+#                         images[0],
+#                         width="stretch"
+#                     )
+
+#                 else:
+#                     st.warning(
+#                         "No image found"
+#                     )
+
+
+#     if st.button("🎥 Create Video"):
+
+#         if len(st.session_state.image_files) == 0:
+
+#             st.warning(
+#                 "First generate scenes"
+#             )
+
+#         else:
+
+#             audio_file = "downloads/video_voice.mp3"
+
+
+#             async def generate_voice():
+
+#                 communicate = edge_tts.Communicate(
+#                     script,
+#                     voice_id
+#                 )
+
+#                 await communicate.save(
+#                     audio_file
+#                 )
+
+
+#             with st.spinner("Creating voice..."):
+
+#                 asyncio.run(
+#                     generate_voice()
+#                 )
+
+
+#             output_video = "downloads/final_video.mp4"
+
+
+#             with st.spinner("Making video..."):
+#                 words = get_words(audio_file)
+
+#                 create_video(
+#                     st.session_state.image_files,
+#                     st.session_state.scenes,
+#                      words,
+#                     audio_file,
+#                     output_video,
+#                     caption_style,
+#                     video_type
+#                 )
+
+
+#             st.success(
+#                 "Video Created Successfully 🎉"
+#             )
+
+           
+#             # )
+#             st.session_state.video_path = output_video
+           
+#     if st.session_state.video_path:
+#             st.success("Your video is ready 🎬")
+#             st.video(
+#                 st.session_state.video_path
+#             )
+#             with open(
+#                 st.session_state.video_path,
+#                 "rb"
+#                  ) as f:
+#                 st.download_button(
+#                 "⬇ Download Video",
+#                  data=f.read(),
+#                  file_name="AqilAI_video.mp4",
+#                  mime="video/mp4"
+#             )
+        
+            
+
+
+            
