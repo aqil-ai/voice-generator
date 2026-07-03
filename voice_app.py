@@ -321,13 +321,23 @@ elif page == "🎤 Voice Generator":
     "🔍 Search Voice",
     placeholder="Example: English, Hindi, Arabic, German..."
 )
+    gender = st.radio(
+        "👤 Gender",
+        ["Male", "Female"],
+        horizontal=True
+    )
 
     filtered_voices = [
 
         v for v in voice_map
 
-        if search_voice.lower()
-        in v["label"].lower()
+        if (
+            search_voice.lower() in v["label"].lower()
+            and gender in v["label"]
+        )
+
+        # if search_voice.lower()
+        # in v["label"].lower()
 
     ]
 
@@ -340,6 +350,11 @@ elif page == "🎤 Voice Generator":
     # -----------------------------
     # DROPDOWN
     # -----------------------------
+    # gender = st.radio(
+    #     "👤 Gender",
+    #     ["Male", "Female"],
+    #     horizontal=True
+    # )
     voice_label = st.selectbox(
         "Choose Voice",
         options=[
