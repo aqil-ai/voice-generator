@@ -6,3 +6,6 @@ python-dotenv
 requests
 moviepy==2.2.1
 Pillow
+faster-whisper
+ctranslate2
+av
