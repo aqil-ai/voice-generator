@@ -168,7 +168,7 @@ def make_caption(
 
 #     return output
 
-def create_video(images, captions, words, audio_path, output_path, caption_style, video_type):
+def create_video(images, captions, words, audio_path, output_path, caption_style, video_type, animation_style, animation_speed):
     print("VIDEO TYPE =", video_type)
     settings = VIDEO_SETTINGS[video_type]
 
@@ -176,6 +176,16 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
     video_height = settings["height"]
 
     zoom = settings["zoom"]
+    # Animation Speed
+
+    if animation_speed == "Slow":
+        speed = 0.05
+
+    elif animation_speed == "Normal":
+        speed = 0.10
+
+    else:
+        speed = 0.20
 
     caption_position = settings["caption_y"]
     audio = AudioFileClip(audio_path)
@@ -213,6 +223,9 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
             img,
             video_type
         )
+        print("Images:", len(images))
+        print("Captions:", len(captions))
+        print("Words:", len(words))
         # if video_type in [
         #     "YouTube Shorts",
         #     "TikTok",
@@ -235,19 +248,73 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
             # .with_position ("center", caption_position)
             # .crop(width=1280, height=720, x_center="center", y_center="center") 
         )
-        zoom_type = random.choice([
-            "in",
-            "out"
-        ])
-        if zoom_type == "in":
+        # -------------------------
+# NONE
+# -------------------------
+        if animation_style == "None":
+
+            pass
+        # -------------------------
+# RANDOM
+# -------------------------
+        elif animation_style == "Random":
+
+            animation_style = random.choice([
+                "Zoom In",
+                "Zoom Out",
+                "Ken Burns"
+            ])
+
+
+# -------------------------
+# ZOOM IN
+# -------------------------
+        if animation_style == "Zoom In":
+
             image_clip = image_clip.resized(
-                lambda t: 1 + (zoom - 1) * (t / duration)
+            lambda t: 1 + speed * t
             )
 
-        else:
+
+# -------------------------
+# ZOOM OUT
+# -------------------------
+        elif animation_style == "Zoom Out":
+
             image_clip = image_clip.resized(
-                lambda t: zoom - (zoom - 1) * (t / duration)
-    )
+            lambda t: zoom - speed * t
+            )
+
+
+# -------------------------
+# KEN BURNS
+# -------------------------
+        elif animation_style == "Ken Burns":
+
+            image_clip = (
+                image_clip
+                .resized(
+                lambda t: 1 + speed * t
+                )
+                .with_position(
+                    lambda t: (-20*t, -10*t)
+    
+            )
+        )
+    
+    #     zoom_type = random.choice([
+    #         "in",
+    #         "out"
+    #     ])
+    #     if zoom_type == "in":
+    #         image_clip = image_clip.resized(
+    #             lambda t: 1 + (zoom - 1) * (t / duration)
+    #         )
+
+    #     else:
+    #         image_clip = image_clip.resized(
+    #             lambda t: zoom - (zoom - 1) * (t / duration)
+    # )
         
     #     zoom_type = random.choice([
     #         "zoom_in",

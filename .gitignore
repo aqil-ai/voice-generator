@@ -1,2 +1,7 @@
 voice.mp3
 .env
+__pycache__/
+*.pyc
+
+downloads/
+temp/

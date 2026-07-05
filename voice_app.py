@@ -9,9 +9,12 @@ import random
 import zipfile
 from io import BytesIO
 import urllib.parse
-# from modules.scenes import split_into_scenes
-# from modules.video import create_video
-# from modules.captions import get_words
+from modules.scenes import split_into_scenes
+from modules.video import create_video
+from modules.captions import get_words
+import shutil
+
+# from utils import split_script_into_chunks
 
 def get_language_display(locale):
 
@@ -88,8 +91,10 @@ p, li, label, span, div {
 
 /* Text Area */
 textarea {
-    background-color: white !important;
-    color: black !important;
+    border: 2px solid black !important;
+    border-radius: 8px !important;    
+    # background-color: white !important;
+    # color: black !important;
 }
 
 /* Input Fields */
@@ -153,7 +158,7 @@ page = st.sidebar.selectbox(
         "🎤 Voice Generator",
         "🖼 Image Generator",
         # "🎨 AI Image Generator",
-        # "🎬 AI Video Generator"
+        "🎬 AI Video Generator"
     ]
 )
 
@@ -648,197 +653,311 @@ elif page == "🖼 Image Generator":
 #                         key=f"ai_download_{i}"
 #                     )
 
-# # 🎬 AI Video Generator
-# elif page == "🎬 AI Video Generator":
+# 🎬 AI Video Generator
+elif page == "🎬 AI Video Generator":
 
-#     st.title("🎬 AI Video Generator")
+    st.title("🎬 AI Video Generator")
 
-#     script = st.text_area(
-#         "📝 Enter Script",
-#         height=250
-#     )
+    script = st.text_area(
+        "📝 Enter Script",
+        height=250
+    )
+    # script_chunks = split_script_into_chunks(script)
+    # -------------------------
+# Script Statistics
+# -------------------------
 
-#     video_type = st.selectbox(
-#         "📱 Video Type",
-#         [
-#             "YouTube Long",
-#             "YouTube Shorts",
-#             "TikTok",
-#             "Instagram Reel",
-#             "Netflix Documentary"
-#         ]
-#     )
-#     caption_style = st.selectbox(
-#         "🎨 Caption Style",
-#         [
-#             "Yellow",
-#             "White",
-#             "TikTok",
-#             "YouTube Shorts",
-#             "Neon Green"
-#         ]
-#     )
-#     all_voices = load_voices()
-#     voice_map = []
-#     for v in all_voices:
-#         voice_map.append({
-#             "label":
-#             f"{get_language_display(v['Locale'])} | "
-#             f"{v['Gender']} | "
-#             f"{v['ShortName']}",
-#              "value":
-#              v["ShortName"]
-#         })
-#     voice_label = st.selectbox(
-#         "🎤 Select Voice",
-#         options=[
-#             v["label"]
-#             for v in voice_map
-#         ]
-#     )
-#     selected_voice = next(
-#         v for v in voice_map
-#         if v["label"] == voice_label
-#     )
-#     voice_id = selected_voice["value"]
-#     if "video_path" not in st.session_state:
-#         st.session_state.video_path = None
+    char_count = len(script)
+    word_count = len(script.split())
 
+    estimated_minutes = round(word_count / 150, 1)
 
-#     if "image_files" not in st.session_state:
-#         st.session_state.image_files = []
-#         if "scenes" not in st.session_state:
-#             st.session_state.scenes = []
+    st.caption(
+        f"📝 Characters: {char_count:,} / 30,000   |   "
+        f"📖 Words: {word_count:,}   |   "
+        f"⏱ Estimated Duration: {estimated_minutes} min"
+    )
+    if char_count > 30000:
+        st.error("❌ Maximum 30,000 characters allowed.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        video_type = st.selectbox(
+            "📱 Video Type",
+        [
+                "YouTube Long",
+                "YouTube Shorts",
+                "TikTok",
+                "Instagram Reel",
+                "Netflix Documentary"
+        ]
+    )
+        with col2:
+            animation_style = st.selectbox(
+                "🎥 Animation Style",
+        [
+                    "None",
+                    "Random",
+                    "Zoom In",
+                    "Zoom Out",
+                    "Ken Burns",
+            # "Pan Left",
+            # "Pan Right",
+            # "Pan Up",
+            # "Pan Down",
+            # "Rotate",
+            # "Flip Horizontal",
+            # "Flip Vertical"
+        ]
+    )
+        col3, col4 = st.columns(2)
+        with col3:
+            animation_speed = st.selectbox(
+                "⚡ Animation Speed",
+        [
+                    "Slow",
+                    "Normal",
+                    "Fast"
+        ]
+    )
+        with col4:
+            caption_style = st.selectbox(
+                "🎨 Caption Style",
+        [
+                "Yellow",
+                "White",
+                "TikTok",
+                "YouTube Shorts",
+                "Neon Green"
+        ]
+    )
+    
+    all_voices = load_voices()
+    col5, col6 = st.columns(2)
 
+    with col5:
+        language = st.selectbox(
+            "🌍 Language",
+            sorted(
+                list(
+                set(
+                    get_language_display(v["Locale"])
+                    for v in all_voices
+                )
+            )
+        )
+    )
 
-#     if st.button("🚀 Generate Scenes"):
-
-#         st.session_state.image_files = []
-
-#         scenes = split_into_scenes(script)
-#         st.session_state.scenes = scenes
-
-#         st.success(
-#             f"{len(scenes)} scenes created"
-#         )
-
-#         cols = st.columns(2)
-
-#         for i, scene in enumerate(scenes):
-
-#             with cols[i % 2]:
-
-#                 st.subheader(
-#                     f"Scene {i+1}"
-#                 )
-
-#                 st.write(scene)
-
-#                 images = search_images(scene)
-
-#                 if len(images) > 0:
-
-#                     image_path = f"downloads/scene_{i}.jpg"
-
-#                     image_data = requests.get(
-#                         images[0]
-#                     ).content
-
-#                     with open(
-#                         image_path,
-#                         "wb"
-#                     ) as f:
-#                         f.write(image_data)
-
-
-#                     st.session_state.image_files.append(
-#                         image_path
-#                     )
-
-
-#                     st.image(
-#                         images[0],
-#                         width="stretch"
-#                     )
-
-#                 else:
-#                     st.warning(
-#                         "No image found"
-#                     )
-
-
-#     if st.button("🎥 Create Video"):
-
-#         if len(st.session_state.image_files) == 0:
-
-#             st.warning(
-#                 "First generate scenes"
-#             )
-
-#         else:
-
-#             audio_file = "downloads/video_voice.mp3"
-
-
-#             async def generate_voice():
-
-#                 communicate = edge_tts.Communicate(
-#                     script,
-#                     voice_id
-#                 )
-
-#                 await communicate.save(
-#                     audio_file
-#                 )
+    with col6:
+        gender = st.selectbox(
+        "👤 Gender",
+        [
+            "Male",
+            "Female"
+        ]
+    )
+    voice_map = []
+    for v in all_voices:
+        if (
+            get_language_display(v["Locale"]) == language
+            and v["Gender"] == gender
+        ):
+            voice_map.append({
+                "label": v["ShortName"],
+                "value": v["ShortName"]
+        })
+        # voice_map.append({
+        #     "label":
+        #     f"{get_language_display(v['Locale'])} | "
+        #     f"{v['Gender']} | "
+        #     f"{v['ShortName']}",
+        #      "value":
+        #      v["ShortName"]
+        # })
+    voice_label = st.selectbox(
+        "🎤 Select Voice",
+        options=[
+            v["label"]
+            for v in voice_map
+        ]
+    )
+    selected_voice = next(
+        v for v in voice_map
+        if v["label"] == voice_label
+    )
+    voice_id = selected_voice["value"]
+    if "video_path" not in st.session_state:
+        st.session_state.video_path = None
 
 
-#             with st.spinner("Creating voice..."):
+    if "image_files" not in st.session_state:
+        st.session_state.image_files = []
+        if "scenes" not in st.session_state:
+            st.session_state.scenes = []
+# 👇 Buttons yahan
+    st.divider()
+    # col_btn1, col_btn2 = st.columns(2)
+    col_btn1, col_btn2, col_btn3 = st.columns([2, 1, 1])
 
-#                 asyncio.run(
-#                     generate_voice()
-#                 )
+    with col_btn1:
+        generate_btn = st.button(
+            "🚀 Generate Scenes",
+            use_container_width=True
+        )
+    with col_btn2:
+        create_btn = st.button(
+            "🎥 Create Video",
+            use_container_width=True
+            )
+    # if st.button("🚀 Generate Scenes"):
+    if generate_btn:
+        st.session_state.image_files = []
+
+        scenes = split_into_scenes(script)
+        st.session_state.scenes = scenes
+
+        st.success(
+            f"{len(scenes)} scenes created"
+        )
+
+        cols = st.columns(2)
+
+        for i, scene in enumerate(scenes):
+
+            with cols[i % 2]:
+
+                st.subheader(
+                    f"Scene {i+1}"
+                )
+
+                st.write(scene)
+
+                images = search_images(scene)
+
+                if len(images) > 0:
+                    os.makedirs("temp", exist_ok=True)
+                    image_path = f"temp/scene_{i}.jpg"
+
+                    # image_path = f"downloads/scene_{i}.jpg"
+
+                    image_data = requests.get(
+                        images[0]
+                    ).content
+
+                    with open(
+                        image_path,
+                        "wb"
+                    ) as f:
+                        f.write(image_data)
 
 
-#             output_video = "downloads/final_video.mp4"
+                    st.session_state.image_files.append(
+                        image_path
+                    )
 
 
-#             with st.spinner("Making video..."):
-#                 words = get_words(audio_file)
+                    st.image(
+                        images[0],
+                        width="stretch"
+                    )
 
-#                 create_video(
-#                     st.session_state.image_files,
-#                     st.session_state.scenes,
-#                      words,
-#                     audio_file,
-#                     output_video,
-#                     caption_style,
-#                     video_type
-#                 )
+                else:
+                    st.warning(
+                        "No image found"
+                    )
 
 
-#             st.success(
-#                 "Video Created Successfully 🎉"
-#             )
+    # if st.button("🎥 Create Video"):
+    # if generate_btn:
+    if create_btn:
+        if len(st.session_state.image_files) == 0:
+
+            st.warning(
+                "First generate scenes"
+            )
+
+        else:
+            os.makedirs("temp", exist_ok=True)
+            audio_file = "temp/video_voice.mp3"
+
+            # audio_file = "downloads/video_voice.mp3"
+
+
+            async def generate_voice():
+
+                communicate = edge_tts.Communicate(
+                    script,
+                    voice_id
+                )
+
+                await communicate.save(
+                    audio_file
+                )
+
+
+            with st.spinner("Creating voice..."):
+
+                asyncio.run(
+                    generate_voice()
+                )
+
+
+            output_video = "downloads/final_video.mp4"
+
+
+            with st.spinner("Making video..."):
+                words = get_words(audio_file)
+
+                create_video(
+                    st.session_state.image_files,
+                    st.session_state.scenes,
+                     words,
+                    audio_file,
+                    output_video,
+                    caption_style,
+                    video_type,
+                    animation_style,
+                    animation_speed
+                )
+
+
+            st.success(
+                "Video Created Successfully 🎉"
+            )
 
            
-#             # )
-#             st.session_state.video_path = output_video
+            # )
+            st.session_state.video_path = output_video
            
-#     if st.session_state.video_path:
-#             st.success("Your video is ready 🎬")
-#             st.video(
-#                 st.session_state.video_path
-#             )
-#             with open(
-#                 st.session_state.video_path,
-#                 "rb"
-#                  ) as f:
-#                 st.download_button(
-#                 "⬇ Download Video",
-#                  data=f.read(),
-#                  file_name="AqilAI_video.mp4",
-#                  mime="video/mp4"
-#             )
+    if st.session_state.video_path:
+            st.success("Your video is ready 🎬")
+            st.video(
+                st.session_state.video_path
+            )
+            with open(
+                st.session_state.video_path,
+                "rb"
+                 ) as f:
+                st.download_button(
+                "⬇ Download Video",
+                 data=f.read(),
+                 file_name="AqilAI_video.mp4",
+                 mime="video/mp4"
+            )
+        
+
+# # Delete temporary scene images
+# for image_path in st.session_state.image_files:
+#     if os.path.exists(image_path):
+#         os.remove(image_path)
+
+# # Clear list
+# st.session_state.image_files = []
+# Delete temp folder after video creation
+    if create_btn and st.session_state.video_path:
+        if os.path.exists("temp"):
+            shutil.rmtree("temp")
+            st.session_state.image_files = []
         
             
 
