@@ -4,3 +4,5 @@ deep-translator
 streamlit-local-storage
 python-dotenv
 requests
+moviepy==2.2.1
+Pillow
