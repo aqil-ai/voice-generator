@@ -11,6 +11,8 @@ from io import BytesIO
 import urllib.parse
 from modules.scenes import split_into_scenes
 from modules.video import create_video
+from modules.custom_video import create_custom_video
+# from modules.video import create_video, create_custom_video
 from modules.captions import get_words
 import shutil
 
@@ -65,8 +67,11 @@ st.set_page_config(
 )
 
 load_dotenv()
-
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+PEXELS_API_KEY = (
+    st.secrets.get("PEXELS_API_KEY")
+    or os.getenv("PEXELS_API_KEY")
+)
+# PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 # -----------------------------
 # PROFESSIONAL UI
 # -----------------------------
@@ -158,7 +163,8 @@ page = st.sidebar.selectbox(
         "🎤 Voice Generator",
         "🖼 Image Generator",
         # "🎨 AI Image Generator",
-        "🎬 AI Video Generator"
+        "🎬 AI Video Generator",
+        "🎬 Custom Video Generator"
     ]
 )
 
@@ -958,8 +964,255 @@ elif page == "🎬 AI Video Generator":
         if os.path.exists("temp"):
             shutil.rmtree("temp")
             st.session_state.image_files = []
+
+# Custom Video Generator       
+elif page == "🎬 Custom Video Generator":
+
+    st.title("🎬 Custom Video Generator")
+    if "custom_image_files" not in st.session_state:
+        st.session_state.custom_image_files = []
+    if "custom_scenes" not in st.session_state:
+        st.session_state.custom_scenes = []
+
+    st.info("Create videos using your own scenes and images.")
+
+    scene_count = st.number_input(
+        "🎬 Number of Scenes",
+        min_value=1,
+        max_value=20,
+        value=3
+    )
+
+    uploaded_images = []
+    scene_texts = []
+
+    for i in range(scene_count):
+
+        st.divider()
+
+        st.subheader(f"🎬 Scene {i+1}")
+
+        scene = st.text_area(
+            f"Scene {i+1}",
+            key=f"scene_{i}"
+        )
+        images = st.file_uploader(
+            f"🖼 Upload Images for Scene {i+1} (Maximum 3)",
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=True,
+            key=f"images_{i}"
+        )
+        if len(images) > 3:
+            st.error("Maximum 3 images allowed.")
+        else:
+            cols = st.columns(3)
+            for j, img in enumerate(images):
+                with cols[j]:
+                    st.image(
+                    img,
+                    use_container_width=True
+                )
+            scene_texts.append(scene)
+            uploaded_images.append(images) 
+    # Video Type + Animation
+    col1, col2 = st.columns(2)
+
+    with col1:
+        video_type = st.selectbox(
+            "📱 Video Type",
+        [
+            "YouTube Long",
+            "YouTube Shorts",
+            "TikTok",
+            "Instagram Reel",
+            "Netflix Documentary"
+        ],
+        key="custom_video_type"
+    )
+    with col2:
+        animation_style = st.selectbox(
+            "🎥 Animation Style",
+        [
+            "None",
+            "Random",
+            "Zoom In",
+            "Zoom Out",
+            "Ken Burns"
+        ],
+        key="custom_animation"
+    )
+    # Animation Speed + Caption Style
+    col3, col4 = st.columns(2)
+    with col3:
+        animation_speed = st.selectbox(
+            "⚡ Animation Speed",
+        [
+            "Slow",
+            "Normal",
+            "Fast"
+        ],
+        key="custom_speed"
+    )
+
+    with col4:
+        caption_style = st.selectbox(
+            "🎨 Caption Style",
+        [
+            "Yellow",
+            "White",
+            "TikTok",
+            "YouTube Shorts",
+            "Neon Green"
+        ],
+        key="custom_caption"
+    )
+    # Voice Selection
+    all_voices = load_voices()
+    col5, col6 = st.columns(2)
+    with col5:
+        language = st.selectbox(
+            "🌍 Language",
+            sorted(
+                list(
+                    set(
+                    get_language_display(v["Locale"])
+                    for v in all_voices
+                )
+            )
+        ),
+        key="custom_language"
+    )
+
+    with col6:
+        gender = st.selectbox(
+            "👤 Gender",
+        [
+            "Male",
+            "Female"
+        ],
+        key="custom_gender"
+    )
+    voice_map = []
+    for v in all_voices:
+        if (
+        get_language_display(v["Locale"]) == language
+        and v["Gender"] == gender
+    ):
+            voice_map.append({
+                "label": v["ShortName"],
+                "value": v["ShortName"]
+
+        })
+    voice_label = st.selectbox(
+        "🎤 Select Voice",
+        options=[
+        v["label"]
+        for v in voice_map
+    ],
+
+    key="custom_voice"
+    )
+    selected_voice = next(
+        v
+        for v in voice_map
+        if v["label"] == voice_label
+    )
+
+    voice_id = selected_voice["value"]
+    st.divider()
+    generate_video = st.button(
+        "🎥 Generate Custom Video",
+        use_container_width=True,
+        key="custom_video_btn"
+    )
+
+    if generate_video:
+        os.makedirs("temp", exist_ok=True)
+        st.session_state.custom_image_files = []
+        st.session_state.custom_scenes = []
         
-            
+        for scene_index, images in enumerate(uploaded_images):
+            current_scene = scene_texts[scene_index]
+            if current_scene.strip() == "":
+                continue
+
+            scene_images = []
+
+            for image_index, image in enumerate(images):
+                image_path = (
+                f"temp/scene_{scene_index}_{image_index}.jpg"
+                )
+
+                with open(image_path, "wb") as f:
+                    f.write(image.read())
+
+                scene_images.append(image_path)
+
+            st.session_state.custom_scenes.append(
+                {
+                    "text": current_scene,
+                    "images": scene_images
+                    }
+            )
+        
+        # for scene_index, images in enumerate(uploaded_images):
+        #     current_scene = scene_texts[scene_index]
+        #     if current_scene.strip() == "":
+        #         continue
+        #     st.session_state.custom_scenes.append(current_scene)
+        #     for image_index, image in enumerate(images):
+        #         image_path = (
+        #             f"temp/"
+        #             f"scene_{scene_index}_{image_index}.jpg"
+        #         )
+        #         with open(image_path, "wb") as f:
+        #             f.write(image.read())
+
+        #         st.session_state.custom_image_files.append(image_path)
+
+        audio_file = "temp/custom_voice.mp3"
+        full_script = " ".join(
+            scene["text"]
+            for scene in st.session_state.custom_scenes
+            # st.session_state.custom_scenes
+        )
+        async def generate_voice():
+            communicate = edge_tts.Communicate(
+            full_script,
+            voice_id
+            )
+            await communicate.save(audio_file)
+        with st.spinner("Generating Voice..."):
+            asyncio.run(generate_voice())
+        words = get_words(audio_file)
+        output_video = "temp/custom_video.mp4"
+
+        create_custom_video(
+            # st.session_state.custom_image_files,
+            st.session_state.custom_scenes,
+            words,
+            audio_file,
+            output_video,
+            caption_style,
+            video_type,
+            animation_style,
+            animation_speed,
+        )
+        st.success("✅ Custom Video Created!")
+        st.video(output_video)
+        
+        with open(output_video, "rb") as f:
+            st.download_button(
+                "⬇ Download Video",
+                data=f.read(),
+                file_name="custom_video.mp4",
+                mime="video/mp4",
+                key="download_custom_video"
+            )
+
+
+    
+      
 
 
             

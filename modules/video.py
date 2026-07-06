@@ -451,3 +451,26 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
 
 
     return output_path
+
+def create_custom_video(
+        images,
+        captions,
+        words,
+        audio_path,
+        output_path,
+        caption_style,
+        video_type,
+        animation_style,
+        animation_speed
+        ):
+    return create_video(
+        images,
+        captions,
+        words,
+        audio_path,
+        output_path,
+        caption_style,
+        video_type,
+        animation_style,
+        animation_speed,
+        )
