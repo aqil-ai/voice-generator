@@ -67,10 +67,14 @@ st.set_page_config(
 )
 
 load_dotenv()
-PEXELS_API_KEY = (
-    st.secrets.get("PEXELS_API_KEY")
-    or os.getenv("PEXELS_API_KEY")
-)
+try:
+    PEXELS_API_KEY = st.secrets["PEXELS_API_KEY"]
+except Exception:
+    PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+# PEXELS_API_KEY = (
+#     st.secrets.get("PEXELS_API_KEY")
+#     or os.getenv("PEXELS_API_KEY")
+# )
 # PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 # -----------------------------
 # PROFESSIONAL UI
@@ -1120,13 +1124,19 @@ elif page == "🎬 Custom Video Generator":
 
     voice_id = selected_voice["value"]
     st.divider()
+    preview_video = st.button(
+        "👁 Preview Video",
+        use_container_width=True,
+        key="preview_custom_video_btn"
+    )
     generate_video = st.button(
         "🎥 Generate Custom Video",
         use_container_width=True,
         key="custom_video_btn"
     )
 
-    if generate_video:
+    if preview_video or generate_video:
+    # if generate_video:
         os.makedirs("temp", exist_ok=True)
         st.session_state.custom_image_files = []
         st.session_state.custom_scenes = []
@@ -1185,7 +1195,10 @@ elif page == "🎬 Custom Video Generator":
         with st.spinner("Generating Voice..."):
             asyncio.run(generate_voice())
         words = get_words(audio_file)
-        output_video = "temp/custom_video.mp4"
+        if preview_video:
+            output_video = "temp/preview_video.mp4"
+        else:
+            output_video = "temp/custom_video.mp4"
 
         create_custom_video(
             # st.session_state.custom_image_files,
@@ -1198,8 +1211,14 @@ elif page == "🎬 Custom Video Generator":
             animation_style,
             animation_speed,
         )
-        st.success("✅ Custom Video Created!")
-        st.video(output_video)
+        if preview_video:
+            st.success("👁 Preview Ready!")
+            st.video(output_video)
+        else:
+            st.success("✅ Custom Video Created!")
+            st.video(output_video)
+        # st.success("✅ Custom Video Created!")
+        # st.video(output_video)
         
         with open(output_video, "rb") as f:
             st.download_button(
