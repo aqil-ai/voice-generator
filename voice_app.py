@@ -1014,7 +1014,7 @@ elif page == "🎬 Custom Video Generator":
                 with cols[j]:
                     st.image(
                     img,
-                    use_container_width=True
+                    width="stretch"
                 )
             scene_texts.append(scene)
             uploaded_images.append(images) 
@@ -1136,6 +1136,8 @@ elif page == "🎬 Custom Video Generator":
     )
 
     if preview_video or generate_video:
+        progress_bar = st.progress(0)
+        progress_text = st.empty()
     # if generate_video:
         os.makedirs("temp", exist_ok=True)
         st.session_state.custom_image_files = []
@@ -1164,6 +1166,8 @@ elif page == "🎬 Custom Video Generator":
                     "images": scene_images
                     }
             )
+            progress_bar.progress(10)
+            progress_text.info("📂 Images Saved (10%)")
         
         # for scene_index, images in enumerate(uploaded_images):
         #     current_scene = scene_texts[scene_index]
@@ -1194,12 +1198,17 @@ elif page == "🎬 Custom Video Generator":
             await communicate.save(audio_file)
         with st.spinner("Generating Voice..."):
             asyncio.run(generate_voice())
+        progress_bar.progress(35)
+        progress_text.info("🎤 Voice Generated (35%)")
         words = get_words(audio_file)
+        progress_bar.progress(50)
+        progress_text.info("📝 Captions Ready (50%)")
         if preview_video:
             output_video = "temp/preview_video.mp4"
         else:
             output_video = "temp/custom_video.mp4"
-
+        progress_bar.progress(60)
+        progress_text.info("🎬 Creating Video... (60%)")
         create_custom_video(
             # st.session_state.custom_image_files,
             st.session_state.custom_scenes,
@@ -1211,23 +1220,70 @@ elif page == "🎬 Custom Video Generator":
             animation_style,
             animation_speed,
         )
+        progress_bar.progress(100)
+        progress_text.success("✅ Video Generated Successfully (100%)")
+        # Save Preview
         if preview_video:
-            st.success("👁 Preview Ready!")
-            st.video(output_video)
+            st.session_state.preview_video_path = output_video
+            with open(output_video, "rb") as f:
+                st.session_state.preview_video_bytes = f.read()
+
+# Save Final Video
         else:
-            st.success("✅ Custom Video Created!")
-            st.video(output_video)
-        # st.success("✅ Custom Video Created!")
-        # st.video(output_video)
+            st.session_state.final_video_path = output_video
+            with open(output_video, "rb") as f:
+                st.session_state.final_video_bytes = f.read()
+        # if preview_video:
+        #     st.success("👁 Preview Ready!")
+        #     st.video(output_video)
+        # else:
+        #     st.success("✅ Custom Video Created!")
+        #     st.video(output_video)
+        # # st.success("✅ Custom Video Created!")
+        # # st.video(output_video)
         
-        with open(output_video, "rb") as f:
-            st.download_button(
-                "⬇ Download Video",
-                data=f.read(),
-                file_name="custom_video.mp4",
-                mime="video/mp4",
-                key="download_custom_video"
-            )
+        # with open(output_video, "rb") as f:
+        #     st.download_button(
+        #         "⬇ Download Video",
+        #         data=f.read(),
+        #         file_name="custom_video.mp4",
+        #         mime="video/mp4",
+        #         key="download_custom_video"
+        #     )
+    # ==========================
+# Preview
+# ==========================
+
+    if "preview_video_path" in st.session_state:
+        st.subheader("👁 Preview")
+        st.video(
+            st.session_state.preview_video_path
+        )
+        st.download_button(
+            "⬇ Download Preview",
+            data=st.session_state.preview_video_bytes,
+            file_name="preview_video.mp4",
+            mime="video/mp4",
+            key="download_preview"
+        )
+
+
+# ==========================
+# Final Video
+# ==========================
+
+    if "final_video_path" in st.session_state:
+        st.subheader("🎬 Final Video")
+        st.video(
+        st.session_state.final_video_path
+        )
+        st.download_button(
+            "⬇ Download Final Video",
+            data=st.session_state.final_video_bytes,
+            file_name="custom_video.mp4",
+            mime="video/mp4",
+            key="download_final"
+        )
 
 
     

@@ -7,7 +7,7 @@ from moviepy import (
 import random
 import uuid
 from modules.image_engine import compose_image
-
+from modules.fonts import load_font
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 from PIL import ImageFilter
@@ -97,10 +97,14 @@ def make_caption(
         text_color = "yellow"
         stroke_color = "black"
     font_size = VIDEO_SETTINGS[video_type]["font"]
-    font = ImageFont.truetype(
-        "arial.ttf",
-        font_size
+    font = load_font(
+        font_size,
+        "Bold"
     )
+    # font = ImageFont.truetype(
+    #     
+    #     font_size
+    # )
     words_list = text.split()
 
     total_width = 0
