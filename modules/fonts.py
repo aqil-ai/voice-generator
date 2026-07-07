@@ -1,50 +1,35 @@
 import os
 from PIL import ImageFont
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.abspath(__file__)
-    )
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..")
 )
 
-FONT_DIR = os.path.join(
-    BASE_DIR,
-    "fonts"
-)
+FONT_DIR = os.path.join(BASE_DIR, "fonts")
 
 FONT_CACHE = {}
 
 
-def load_font(
-    size,
-    weight="Bold"
-):
+def load_font(size, weight="Bold"):
 
     font_name = f"Poppins-{weight}.ttf"
+    font_path = os.path.join(FONT_DIR, font_name)
 
-    font_path = os.path.join(
-        FONT_DIR,
-        font_name
-    )
-
-    cache_key = (
-        font_name,
-        size
-    )
+    cache_key = (font_name, size)
 
     if cache_key in FONT_CACHE:
         return FONT_CACHE[cache_key]
 
-    try:
+    print("BASE_DIR:", BASE_DIR)
+    print("FONT_DIR:", FONT_DIR)
+    print("FONT PATH:", font_path)
 
-        font = ImageFont.truetype(
-            font_path,
-            size
+    if not os.path.exists(font_path):
+        raise FileNotFoundError(
+            f"Font file not found:\n{font_path}"
         )
 
-    except Exception:
-
-        font = ImageFont.load_default()
+    font = ImageFont.truetype(font_path, size)
 
     FONT_CACHE[cache_key] = font
 

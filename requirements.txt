@@ -5,7 +5,7 @@ streamlit-local-storage
 python-dotenv
 requests
 moviepy==2.2.1
-Pillow
+Pillow==11.3.0
 faster-whisper
 ctranslate2
 av
