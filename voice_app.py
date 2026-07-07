@@ -848,7 +848,7 @@ elif page == "🎬 AI Video Generator":
                     os.makedirs("temp", exist_ok=True)
                     image_path = f"temp/scene_{i}.jpg"
 
-                    # image_path = f"downloads/scene_{i}.jpg"
+                    # image_path = f"/scene_{i}.jpg"
 
                     image_data = requests.get(
                         images[0]
@@ -890,7 +890,7 @@ elif page == "🎬 AI Video Generator":
             os.makedirs("temp", exist_ok=True)
             audio_file = "temp/video_voice.mp3"
 
-            # audio_file = "downloads/video_voice.mp3"
+            # audio_file = "/video_voice.mp3"
 
 
             async def generate_voice():
@@ -912,7 +912,8 @@ elif page == "🎬 AI Video Generator":
                 )
 
 
-            output_video = "downloads/final_video.mp4"
+            output_video = "temp/final_video.mp4"
+            # output_video = "downloads/final_video.mp4"
 
 
             with st.spinner("Making video..."):
