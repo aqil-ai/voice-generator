@@ -796,8 +796,10 @@ elif page == "🎬 AI Video Generator":
         if v["label"] == voice_label
     )
     voice_id = selected_voice["value"]
-    if "video_path" not in st.session_state:
-        st.session_state.video_path = None
+    if "video_bytes" not in st.session_state:
+        st.session_state.video_bytes = None
+    # if "video_path" not in st.session_state:
+        # st.session_state.video_path = None
 
 
     if "image_files" not in st.session_state:
@@ -938,22 +940,28 @@ elif page == "🎬 AI Video Generator":
 
            
             # )
-            st.session_state.video_path = output_video
+            with open(output_video, "rb") as f:
+                st.session_state.video_bytes = f.read()
+            # st.session_state.video_path = output_video
            
-    if st.session_state.video_path:
+    if st.session_state.video_bytes is not None:
+    # if st.session_state.video_path:
             st.success("Your video is ready 🎬")
             st.video(
-                st.session_state.video_path
+                st.session_state.video_bytes
+                # st.session_state.video_path
             )
-            with open(
-                st.session_state.video_path,
-                "rb"
-                 ) as f:
-                st.download_button(
+            # with open(
+            #     st.session_state.video_path,
+            #     "rb"
+            #      ) as f:
+            st.download_button(
                 "⬇ Download Video",
-                 data=f.read(),
+                 data=st.session_state.video_bytes,
+                #  data=f.read(),
                  file_name="AqilAI_video.mp4",
-                 mime="video/mp4"
+                 mime="video/mp4",
+                 on_click="ignore"
             )
         
 
@@ -965,11 +973,14 @@ elif page == "🎬 AI Video Generator":
 # # Clear list
 # st.session_state.image_files = []
 # Delete temp folder after video creation
-    if create_btn and st.session_state.video_path:
+    # if create_btn and st.session_state.video_path:
+    #     if os.path.exists("temp"):
+    #         shutil.rmtree("temp")
+    #         st.session_state.image_files = []
+    if create_btn:
         if os.path.exists("temp"):
             shutil.rmtree("temp")
-            st.session_state.image_files = []
-
+        os.makedirs("temp", exist_ok=True)
 # Custom Video Generator       
 elif page == "🎬 Custom Video Generator":
 
@@ -978,7 +989,10 @@ elif page == "🎬 Custom Video Generator":
         st.session_state.custom_image_files = []
     if "custom_scenes" not in st.session_state:
         st.session_state.custom_scenes = []
-
+    if "preview_video_bytes" not in st.session_state:
+        st.session_state.preview_video_bytes = None
+    if "final_video_bytes" not in st.session_state:
+        st.session_state.final_video_bytes = None
     st.info("Create videos using your own scenes and images.")
 
     scene_count = st.number_input(
@@ -1226,13 +1240,13 @@ elif page == "🎬 Custom Video Generator":
         progress_text.success("✅ Video Generated Successfully (100%)")
         # Save Preview
         if preview_video:
-            st.session_state.preview_video_path = output_video
+            # st.session_state.preview_video_path = output_video
             with open(output_video, "rb") as f:
                 st.session_state.preview_video_bytes = f.read()
 
 # Save Final Video
         else:
-            st.session_state.final_video_path = output_video
+            # st.session_state.final_video_path = output_video
             with open(output_video, "rb") as f:
                 st.session_state.final_video_bytes = f.read()
         # if preview_video:
@@ -1256,35 +1270,38 @@ elif page == "🎬 Custom Video Generator":
 # Preview
 # ==========================
 
-    if "preview_video_path" in st.session_state:
+    if st.session_state.preview_video_bytes is not None:
+    # if "preview_video_bytes" in st.session_state:
         st.subheader("👁 Preview")
         st.video(
-            st.session_state.preview_video_path
+            st.session_state.preview_video_bytes
         )
         st.download_button(
             "⬇ Download Preview",
             data=st.session_state.preview_video_bytes,
             file_name="preview_video.mp4",
             mime="video/mp4",
-            key="download_preview"
+            key="download_preview",
+            on_click="ignore"
         )
 
 
 # ==========================
 # Final Video
 # ==========================
-
-    if "final_video_path" in st.session_state:
+    if st.session_state.final_video_bytes is not None:
+    # if "final_video_bytes" in st.session_state:
         st.subheader("🎬 Final Video")
         st.video(
-        st.session_state.final_video_path
+        st.session_state.final_video_bytes
         )
         st.download_button(
             "⬇ Download Final Video",
             data=st.session_state.final_video_bytes,
             file_name="custom_video.mp4",
             mime="video/mp4",
-            key="download_final"
+            key="download_final",
+            on_click="ignore"
         )
 
 
