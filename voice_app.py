@@ -984,8 +984,9 @@ elif page == "🎬 Custom Video Generator":
     scene_count = st.number_input(
         "🎬 Number of Scenes",
         min_value=1,
-        max_value=20,
-        value=3
+        max_value=90,
+        value=3,
+        step=1
     )
 
     uploaded_images = []
