@@ -11,6 +11,9 @@ from modules.fonts import load_font
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 from PIL import ImageFilter
+from moviepy import AudioFileClip, CompositeAudioClip
+from moviepy import concatenate_audioclips
+from modules.audio_engine import build_audio
 
 VIDEO_SETTINGS = {
 
@@ -172,7 +175,19 @@ def make_caption(
 
 #     return output
 
-def create_video(images, captions, words, audio_path, output_path, caption_style, video_type, animation_style, animation_speed):
+def create_video(
+        images, 
+        captions, 
+        words, 
+        audio_path, 
+        output_path, 
+        caption_style, 
+        video_type, 
+        animation_style, 
+        animation_speed, 
+        bg_music_path=None, 
+        music_volume=20
+        ):
     print("VIDEO TYPE =", video_type)
     settings = VIDEO_SETTINGS[video_type]
 
@@ -439,8 +454,63 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
         [video] + word_clips,
         size=(video_width, video_height)
     )
-    video = video.with_audio(audio)
+    # video = video.with_audio(audio)
+    # ===========================
+# Background Music
+# ===========================
+      
+    final_audio = build_audio(
+        voice_path=audio_path,
+        bg_music_path=bg_music_path,
+        music_volume=music_volume
+        )
+#     final_audio = audio
+#     if bg_music_path is not None:
+#         try:
+#             bg_music = AudioFileClip(bg_music_path)
 
+#             # =====================================
+# # # Auto Loop Music
+# # # =====================================
+
+#             if bg_music.duration < audio.duration:
+#                 loops = int(audio.duration // bg_music.duration) + 1
+#                 bg_music = concatenate_audioclips(
+#                     [bg_music] * loops
+#                     )
+
+# # Trim to narration length
+#             bg_music = bg_music.subclipped(
+#                 0,
+#                 audio.duration
+#                 )
+
+# # Apply user volume
+#             bg_music = bg_music.with_volume_scaled(
+#                 music_volume / 100
+#                 )
+
+# # Merge voice + music
+#             final_audio = CompositeAudioClip(
+#                 [
+#                     audio,
+#                     bg_music
+#                     ]
+#                     )
+#             # bg_music = AudioFileClip(bg_music_path)
+#             # bg_music = bg_music.with_volume_scaled(
+#             # music_volume / 100
+#             # )
+#             # final_audio = CompositeAudioClip(
+#             #     [
+#             #         audio,
+#             #         bg_music
+#             #         ]
+#             #         )
+#         except Exception as e:
+#             print("Music Error:", e)
+
+    video = video.with_audio(final_audio)
 
     video.write_videofile(
         output_path,
@@ -448,12 +518,10 @@ def create_video(images, captions, words, audio_path, output_path, caption_style
         codec="libx264",
         audio_codec="aac",
         ffmpeg_params=[
-            "-pix_fmt",
-            "yuv420p"
+        "-pix_fmt",
+        "yuv420p"
         ]
-    )
-
-
+        )
     return output_path
 
 def create_custom_video(
