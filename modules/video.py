@@ -522,6 +522,15 @@ def create_video(
         "yuv420p"
         ]
         )
+    video.close()
+    try:
+        audio.close()
+    except:
+        pass
+    try:
+        final_audio.close()
+    except:
+        pass
     return output_path
 
 def create_custom_video(

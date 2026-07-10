@@ -1065,8 +1065,8 @@ elif page == "🎬 AI Video Generator":
     #         st.session_state.image_files = []
     if create_btn:
         if os.path.exists("temp"):
-            shutil.rmtree("temp")
-        os.makedirs("temp", exist_ok=True)
+            # shutil.rmtree("temp")
+            os.makedirs("temp", exist_ok=True)
 # Custom Video Generator       
 elif page == "🎬 Custom Video Generator":
 
