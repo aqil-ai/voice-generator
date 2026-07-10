@@ -11,6 +11,7 @@ from modules.video import (
 )
 
 from modules.image_engine import compose_image
+from modules.audio_engine import build_audio
 
 import random
 
@@ -24,6 +25,8 @@ def create_custom_video(
     video_type,
     animation_style,
     animation_speed,
+    bg_music_path=None,
+    music_volume=20
 ):
     """
     scenes format:
@@ -46,6 +49,7 @@ def create_custom_video(
 
     zoom = settings["zoom"]
 
+    
     audio = AudioFileClip(audio_path)
 
     total_words = sum(
@@ -206,7 +210,13 @@ def create_custom_video(
         size=(video_width, video_height)
     )
 
-    video = video.with_audio(audio)
+    final_audio = build_audio(
+        audio_path,
+        bg_music_path,
+        music_volume
+        )
+    video = video.with_audio(final_audio)
+    # video = video.with_audio(audio)
     video.write_videofile(
         output_path,
         fps=24,
@@ -217,5 +227,14 @@ def create_custom_video(
             "yuv420p"
         ]
     )
+    video.close()
+    try:
+        audio.close()
+    except:
+        pass
+    try:
+        final_audio.close()
+    except:
+        pass
 
     return output_path

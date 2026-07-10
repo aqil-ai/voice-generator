@@ -542,7 +542,9 @@ def create_custom_video(
         caption_style,
         video_type,
         animation_style,
-        animation_speed
+        animation_speed,
+        bg_music_path=None, 
+        music_volume=20
         ):
     return create_video(
         images,
@@ -554,4 +556,6 @@ def create_custom_video(
         video_type,
         animation_style,
         animation_speed,
+        bg_music_path=None, 
+        music_volume=20
         )

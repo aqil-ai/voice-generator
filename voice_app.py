@@ -1225,6 +1225,90 @@ elif page == "🎬 Custom Video Generator":
     )
 
     voice_id = selected_voice["value"]
+
+    st.divider()
+    st.subheader("🎵 Background Music")
+    music_style = st.selectbox(
+        "Select Music Style",
+    [
+        "None",
+        "Cinematic",
+        "Documentary",
+        "Corporate",
+        "Technology",
+        "Motivational",
+        "Emotional",
+        "Epic",
+        "Travel",
+        "News"
+    ],
+    key="music_style"
+    )
+    music_files = []
+    if music_style != "None":
+        folder = os.path.join(
+            "music",
+            music_style.lower()
+        )
+        if os.path.exists(folder):
+            music_files = sorted([
+                f for f in os.listdir(folder)
+                if f.endswith(".mp3")
+                ])
+    selected_music = None
+    if len(music_files) > 0:
+        selected_music = st.selectbox(
+            "🎵 Select Music Track",
+            music_files,
+            key="music_track"
+        )
+    
+    music_volume = st.slider(
+        "Music Volume",
+        min_value=0,
+        max_value=100,
+        value=20,
+        step=5,
+        key="music_volume"
+    )
+    preview_music = st.button(
+        "▶ Preview Music",
+        use_container_width=True,
+        key="preview_music_btn"
+    )
+    uploaded_music = st.file_uploader(
+        "Or Upload Your Own Music (Optional)",
+        type=["mp3", "wav"],
+        key="uploaded_music"
+    )
+    bg_music_path = None
+    if uploaded_music is not None:
+        os.makedirs("temp", exist_ok=True)
+        bg_music_path = "temp/custom_music.mp3"
+        with open(bg_music_path, "wb") as f:
+            f.write(uploaded_music.read())
+
+    else:
+        if selected_music:
+            bg_music_path = os.path.join(
+                "music",
+                music_style.lower(),
+                selected_music
+            )
+
+        else:
+            bg_music_path = None
+        # bg_music_path = get_music(music_style)
+    if preview_music and bg_music_path is not None:
+        with open(bg_music_path, "rb") as f:
+            
+            st.session_state.music_preview = f.read()
+    # st.write(bg_music_path)   
+    if "music_preview" in st.session_state:
+        st.audio(
+            st.session_state.music_preview,
+            format="audio/mp3"
+        )
     st.divider()
     preview_video = st.button(
         "👁 Preview Video",
@@ -1321,6 +1405,8 @@ elif page == "🎬 Custom Video Generator":
             video_type,
             animation_style,
             animation_speed,
+            bg_music_path,
+            music_volume
         )
         progress_bar.progress(100)
         progress_text.success("✅ Video Generated Successfully (100%)")
