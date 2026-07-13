@@ -19,6 +19,13 @@ from modules.music import get_music
 
 # from utils import split_script_into_chunks
 
+VOICE_SPEED = {
+    "YouTube Long": "-5%",
+    "Netflix Documentary": "-8%",
+    "YouTube Shorts": "+8%",
+    "TikTok": "+12%",
+    "Instagram Reel": "+10%"
+    }
 def get_language_display(locale):
 
     mapping = {
@@ -703,6 +710,7 @@ elif page == "🎬 AI Video Generator":
                 "Netflix Documentary"
         ]
     )
+        voice_speed = VOICE_SPEED[video_type]
         with col2:
             animation_style = st.selectbox(
                 "🎥 Animation Style",
@@ -983,7 +991,8 @@ elif page == "🎬 AI Video Generator":
 
                 communicate = edge_tts.Communicate(
                     script,
-                    voice_id
+                    voice_id,
+                    rate=voice_speed
                 )
 
                 await communicate.save(
@@ -1135,6 +1144,7 @@ elif page == "🎬 Custom Video Generator":
         ],
         key="custom_video_type"
     )
+        voice_speed = VOICE_SPEED[video_type]
     with col2:
         animation_style = st.selectbox(
             "🎥 Animation Style",
@@ -1379,7 +1389,8 @@ elif page == "🎬 Custom Video Generator":
         async def generate_voice():
             communicate = edge_tts.Communicate(
             full_script,
-            voice_id
+            voice_id,
+            rate=voice_speed
             )
             await communicate.save(audio_file)
         with st.spinner("Generating Voice..."):

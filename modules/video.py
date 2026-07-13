@@ -15,6 +15,7 @@ from moviepy import AudioFileClip, CompositeAudioClip
 from moviepy import concatenate_audioclips
 from modules.audio_engine import build_audio
 
+
 VIDEO_SETTINGS = {
 
     "YouTube Long": {
