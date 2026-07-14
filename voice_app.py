@@ -16,6 +16,7 @@ from modules.custom_video import create_custom_video
 from modules.captions import get_words
 import shutil
 from modules.music import get_music
+MAX_CUSTOM_VIDEO_SCENES = 300
 
 # from utils import split_script_into_chunks
 
@@ -1093,7 +1094,7 @@ elif page == "🎬 Custom Video Generator":
     scene_count = st.number_input(
         "🎬 Number of Scenes",
         min_value=1,
-        max_value=90,
+        max_value=MAX_CUSTOM_VIDEO_SCENES,
         value=3,
         step=1
     )
