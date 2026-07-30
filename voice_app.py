@@ -1236,6 +1236,47 @@ elif page == "🎬 Custom Video Generator":
     )
 
     voice_id = selected_voice["value"]
+    voice_style = st.selectbox(
+            "🎭 Voice Style",
+            [
+                "Custom",
+                "YouTube Narration",
+                "Storytelling",
+                "News Reporter",
+                "Documentary",
+                "YouTube Shorts"
+            ]
+            )
+    speed = 0
+    pitch = 0
+    if voice_style == "Storytelling":
+        speed = -15
+        pitch = -10
+    
+    elif voice_style == "News Reporter":
+        speed = 10
+    
+    elif voice_style == "Documentary":
+        speed = -10
+        pitch = -15
+    
+    elif voice_style == "YouTube Shorts":
+        speed = 25
+        pitch = 10
+    
+    if voice_style == "Custom":
+        speed = st.slider(
+            "⚡ Voice Speed (%)",
+            -50, 50, 0, 5
+            )
+        pitch = st.slider(
+            "🎵 Voice Pitch (Hz)",
+            -50, 50, 0, 5
+            )
+    
+        st.info(
+            f"Speed: {speed}% | Pitch: {pitch}Hz"
+        )
 
     st.divider()
     st.subheader("🎵 Background Music")
